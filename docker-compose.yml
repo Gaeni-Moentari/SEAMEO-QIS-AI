@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  seaqis:
+    image: registry.gaeni.org/seaqis/ai:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.constraint-label=traefik-public"
+        - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.seaqis.rule=Host(`seaqis-ai.gaeni.org`)"
+        - "traefik.http.routers.seaqis.entrypoints=https"
+        - "traefik.http.routers.seaqis.tls=true"
+        - "traefik.http.routers.seaqis.tls.certresolver=le"
+        - "traefik.http.services.seaqis.loadbalancer.server.port=8501"
+    environment:
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      tavilyapi_key: "${TAVILY_API_KEY}"
+      groqapi_key: "${GROQ_API_KEY}"
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true
