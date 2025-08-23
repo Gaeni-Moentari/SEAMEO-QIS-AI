@@ -1,0 +1,34 @@
+name: Deploy to server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.AWS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Build Docker image
+        run: |
+          docker build -t registry.gaeni.org/seaqis/ai:latest .
+          docker push registry.gaeni.org/seaqis/ai:latest
+
+      - name: Deploy to Docker Swarm
+        run: |
+          scp docker-compose.yml ${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }}:~/seaqis-deploy.yml
+          ssh ${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }} "\
+            OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
+            tavilyapi_key='${{ secrets.TAVILY_API_KEY }}' \
+            groqapi_key='${{ secrets.GROQ_API_KEY }}' \
+            docker stack deploy -c ~/seaqis-deploy.yml gema"
