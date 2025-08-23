@@ -31,4 +31,4 @@ jobs:
             OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
             tavilyapi_key='${{ secrets.TAVILY_API_KEY }}' \
             groqapi_key='${{ secrets.GROQ_API_KEY }}' \
-            docker stack deploy -c ~/seaqis-deploy.yml gema"
+            docker stack deploy -c ~/seaqis-deploy.yml seaqis"
